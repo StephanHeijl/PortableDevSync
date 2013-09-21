@@ -6,8 +6,30 @@ import urllib2
 import json
 import hashlib
 import sys
+import subprocess
+import SimpleHTTPServer
+import SocketServer
+import threading
+import time
 from InstallModule import InstallModule
 from Dialog import Dialog
+
+class InterfaceServer(threading.Thread):
+	def __init__(self):
+		self.started = False
+		self.currentPort = 80
+		super(InterfaceServer, self).__init__()
+		
+	def run(self):
+		Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+		while not self.started:
+			try:
+				httpd = SocketServer.TCPServer(("127.0.0.1", self.currentPort), Handler)
+				self.started=True
+			except:
+				self.currentPort+=1
+		httpd.serve_forever()
+		
 
 class PortableDevSync():
 	def __init__(self):
@@ -39,6 +61,16 @@ class PortableDevSync():
 		settingsconf = open("settings.config", "w")
 		settingsconf.write(json.dumps({"access_token": access_token, "user_id":user_id}))
 		settingsconf.close()
+		
+	def __startServer(self):
+		IS = InterfaceServer()
+		IS.daemon = True # Make sure the server stops once the application stops
+		IS.start()
+		
+		while not IS.started:
+			time.sleep(0.1)
+			
+		Dialog(visual).yesno("Server started.", "Server started on port %s. Navigate to http://localhost:%s/ ?" % (IS.currentPort, IS.currentPort))
 	
 	def start(self):	
 		if not os.path.exists("settings.config"):
@@ -52,8 +84,10 @@ class PortableDevSync():
 		account_info = self.client.account_info()
 		name = account_info['display_name']
 		Dialog(visual).message("Logged in.", "Succesfully logged in as %s." % name)
+		Dialog(visual).message("Start interface", "Starting interface.")
+		self.__startServer()
 		
-	def list
+		
 		
 
 def getDropboxAPI():
@@ -70,6 +104,10 @@ def getDropboxAPI():
 if __name__ == "__main__": # AutoRun!
 	# Detect wether or not the dropbox client was installed.
 	visual = True if "-text" not in sys.argv else False
+	
+	if "-silent" in sys.argv:
+		subprocess.Popen("python "+__file__+" -text")
+		sys.exit()
 	
 	Dialog(visual).clearScreen()
 	
