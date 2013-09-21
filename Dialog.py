@@ -1,6 +1,7 @@
 import Tkinter
 import tkMessageBox
 import tkSimpleDialog
+import os
 
 class Dialog():
 	def __init__(self, v=True):
@@ -8,13 +9,16 @@ class Dialog():
 		if v:
 			root = Tkinter.Tk()
 			root.withdraw()
+			
+	def clearScreen(self):
+		if os.system("clear") == 1:
+			os.system("cls")
 	
 	def drawConsoleDialog(self, type, title, message, buttons={}, fields={} ):
 		dialog = []
-		width = 50
+		width = 60
 		textwidth = width-2
 		lines = message.split("\n")
-		print
 		print "+" + ("-"*width) + "+"
 		
 		lineN = 0
@@ -27,8 +31,12 @@ class Dialog():
 				line = lines[lineN]
 				del lines[lineN]
 				while len(line) > textwidth:
-					nl = " ".join( line[0:textwidth].split(" ")[0:-1] )
-					line = line[len(nl):].strip()
+					if " " in line:
+						nl = " ".join( line[0:textwidth].split(" ")[0:-1] )
+					else:
+						nl = line[0:textwidth]
+					
+					line = line[len(nl):]
 					lines.insert(lineN, nl)
 					
 					lineAmount += 1
@@ -55,7 +63,7 @@ class Dialog():
 			
 		print "+" + ("-"*width) + "+"
 		for line in lines:
-			print "| %s |" % line.ljust(width-2, " ")
+			print "| %s |" % line.strip().ljust(width-2, " ")
 		
 		
 		if len( fields ) > 0:
@@ -80,6 +88,7 @@ class Dialog():
 			print b
 			
 		print "+" + ("-"*width) + "+"
+		print
 		
 		if len(buttons) > 0:
 			response = ""

@@ -11,6 +11,7 @@ from Dialog import Dialog
 
 class PortableDevSync():
 	def __init__(self):
+		self.client = None
 		try:
 			app_key, app_secret = self.__getAppKeyAndSecret()
 		except Exception as e:
@@ -23,14 +24,37 @@ class PortableDevSync():
 		response = json.loads(request.read())
 		return response['app_key'],response['app_secret']
 	
-	def start(self):
-		#os.chdir(os.path.basename(os.path.abspath(__file__)))
-		
-		if not os.path.exists("settings.config"):
-			authorize_url = self.flow.start()
-			Dialog(visual).message("Authorization needed.","You will need to authorize PortableDevSync to use your Dropbox account.\nA webpage with the authorization options will open now.")
-			Dialog(visual).yesno("Open browser","Would you like PortableDevSync to open your browser?")
+	def __authenticate(self):
+		authorize_url = self.flow.start()
+		Dialog(visual).message("Authorization needed.","You will need to authorize PortableDevSync to use your Dropbox account.\nA webpage with the authorization options will open now.")
+		if Dialog(visual).yesno("Open browser","Would you like PortableDevSync to the link in your browser for you?"):
 			webbrowser.open(authorize_url)
+		else:
+			Dialog(visual).message("Authorize", "Please visit \n%s\n to authorize the app." % authorize_url)
+		
+		code = Dialog(visual).prompt("Authorization code", "Once you have allowed PortableDevSync, please insert your code here:")
+		
+		access_token, user_id = self.flow.finish(code)
+		
+		settingsconf = open("settings.config", "w")
+		settingsconf.write(json.dumps({"access_token": access_token, "user_id":user_id}))
+		settingsconf.close()
+	
+	def start(self):	
+		if not os.path.exists("settings.config"):
+			self.__authenticate()
+		
+		Dialog(visual).message("Dropbox authenticated.", "Dropbox access authenticated, connecting to Dropbox...")
+		settings = json.load(open("settings.config"))
+		access_token, user_id = settings['access_token'], settings['user_id']
+		
+		self.client = dropbox.client.DropboxClient(access_token)
+		account_info = self.client.account_info()
+		name = account_info['display_name']
+		Dialog(visual).message("Logged in.", "Succesfully logged in as %s." % name)
+		
+	def list
+		
 
 def getDropboxAPI():
 	try:
@@ -46,6 +70,8 @@ def getDropboxAPI():
 if __name__ == "__main__": # AutoRun!
 	# Detect wether or not the dropbox client was installed.
 	visual = True if "-text" not in sys.argv else False
+	
+	Dialog(visual).clearScreen()
 	
 	im = InstallModule(name="dropbox")
 	try:
