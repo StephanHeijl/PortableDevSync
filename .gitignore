@@ -4,6 +4,7 @@
 
 *.pydevproject
 *.pyc
+*.config
 .project
 .metadata
 bin/
