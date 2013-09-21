@@ -3,6 +3,9 @@
 import os
 import webbrowser
 import urllib2
+import ctypes
+import InstallModule
+from Dialog import Dialog
 
 class PortableDevSync():
 	def __init__(self):
@@ -13,19 +16,33 @@ class PortableDevSync():
 	
 	def start(self,gui=True):
 		authorize_url = self.flow.start()
+		Dialog().message("Authorization needed.","You will need to authorize PortableDevSync to use your Dropbox account.\nA webpage with the authorization options will open now.")
 		webbrowser.open(authorize_url)
 		
 
+def getDropboxAPI():
+	im = InstallModule()
+	im.url( "https://www.dropbox.com/static/developers/dropbox-python-sdk-1.6.zip" )
+	im.unzip()
+	im.setup()
+	im.test()
+		
 if __name__ == "__main__": # AutoRun!
 	# Detect wether or not the dropbox client was installed.
 	try:
 		import dropbox
-	except ImportError:
-		im = InstallModule()
-		im.url( "https://www.dropbox.com/static/developers/dropbox-python-sdk-1.6.zip" )
-		im.unzip()
-		im.
+		Dialog().message("Dropbox is available.", "Dropbox API was downloaded and installed succesfully.")
+		dropboxAvailable = True
+		
+	except ImportError:	
+		retry = True
+		while retry:
+			dropboxAvailable = getDropboxAPI()
+			if not dropboxAvailable:
+				retry = Dialog.retrycancel("Dropbox could not be installed.", "There was an error while downloading/installing the Dropbox API.")
+			else:
+				retry = False
 	
 	
-	ads = DropboxAutoDirSync()
+	ads = PortableDevSync()
 	ads.start(gui=True)
