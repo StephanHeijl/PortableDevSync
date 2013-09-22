@@ -6,6 +6,8 @@
 *.pyc
 *.config
 *.log
+*.err
+*.out
 .project
 .metadata
 bin/
