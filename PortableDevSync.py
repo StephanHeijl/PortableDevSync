@@ -7,28 +7,12 @@ import json
 import hashlib
 import sys
 import subprocess
-import SimpleHTTPServer
-import SocketServer
 import threading
 import time
+import datetime
 from InstallModule import InstallModule
 from Dialog import Dialog
-
-class InterfaceServer(threading.Thread):
-	def __init__(self):
-		self.started = False
-		self.currentPort = 80
-		super(InterfaceServer, self).__init__()
-		
-	def run(self):
-		Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-		while not self.started:
-			try:
-				httpd = SocketServer.TCPServer(("127.0.0.1", self.currentPort), Handler)
-				self.started=True
-			except:
-				self.currentPort+=1
-		httpd.serve_forever()
+from InterfaceServer import *
 		
 
 class PortableDevSync():
@@ -59,7 +43,7 @@ class PortableDevSync():
 		access_token, user_id = self.flow.finish(code)
 		
 		settingsconf = open("settings.config", "w")
-		settingsconf.write(json.dumps({"access_token": access_token, "user_id":user_id}))
+		settingsconf.write(json.dumps({"access_token": access_token, "user_id":user_id, "max_size": 2 * 1024 * 1024}))
 		settingsconf.close()
 		
 	def __startServer(self):
@@ -70,7 +54,7 @@ class PortableDevSync():
 		while not IS.started:
 			time.sleep(0.1)
 			
-		Dialog(visual).yesno("Server started.", "Server started on port %s. Navigate to http://localhost:%s/ ?" % (IS.currentPort, IS.currentPort))
+		#Dialog(visual).yesno("Server started.", "Server started on port %s. Navigate to http://localhost:%s/ ?" % (IS.currentPort, IS.currentPort))
 	
 	def start(self):	
 		if not os.path.exists("settings.config"):
@@ -86,8 +70,60 @@ class PortableDevSync():
 		Dialog(visual).message("Logged in.", "Succesfully logged in as %s." % name)
 		Dialog(visual).message("Start interface", "Starting interface.")
 		self.__startServer()
+		#self.__uploadFile("C:\Users\Stephan\Documents\GitHub\PortableDevSync\LICENSE")
+		self.__fileParentRev("LICENSE")
+		
+	def __fileParentRev(self, file):
+		try:
+			response = self.client.metadata(file)
+			Dialog(visual).message("Metadata", str(response))
+			return response['rev']
+		except:
+			return False
+	
+	def __uploadFile(self, dir):
+		try:
+			f = open(dir, 'rb')
+		except IOError:
+			return False
+		
+		response = self.client.put_file(os.path.basename(dir), f)
+		
+		Dialog(visual).message("Uploaded", str(response))
+		
+	def addMonitor(self, dir):
+		if not os.path.exists(dir):		
+			Dialog(visual).error("Could not add monitor","Could not add monitor as this directory does not exist.")
+			return False
+		if not os.path.isDir(dir):		
+			Dialog(visual).error("Could not add monitor","Could not add monitor as this is not a directory.")
+			return False
+
+class Monitor():
+	def __init__(self):
+		self.absolutePath = ""
+		self.relativePath = ""
+		self.name = ""
+		self.latestCheck = datetime.datetime()
+		self.timeFormat = "%d/%m/%y %H:%M"
+				
+		
+	def toJSON(self):
+		vars = {}
+		vars["absolutePath"] = self.absolutePath
+		vars["relativePath"] = self.relativePath
+		vars["name"] = self.name
+		vars["latestCheck"] = self.latestCheck.strftime(self.timeFormat)
+		
+		return json.dumps(vars)
 		
 		
+	def fromJSON(self,json):
+		vars = json.loads(json)
+		self.absolutePath = vars["absolutePath"]
+		self.relativePath = vars["relativePath"]
+		self.latestCheck = vars["latestCheck"].strptime(self.timeFormat)
+		self.name = vars["name"]
 		
 
 def getDropboxAPI():
