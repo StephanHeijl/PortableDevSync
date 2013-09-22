@@ -43,7 +43,7 @@ class PortableDevSync():
 		access_token, user_id = self.flow.finish(code)
 		
 		settingsconf = open("settings.config", "w")
-		settingsconf.write(json.dumps({"access_token": access_token, "user_id":user_id, "max_size": 2 * 1024 * 1024}))
+		settingsconf.write(json.dumps({"access_token": access_token, "user_id":user_id, "max_size": 2 * 1024 * 1024, "monitors":{}}))
 		settingsconf.close()
 		
 	def __startServer(self):
@@ -61,8 +61,8 @@ class PortableDevSync():
 			self.__authenticate()
 		
 		Dialog(visual).message("Dropbox authenticated.", "Dropbox access authenticated, connecting to Dropbox...")
-		settings = json.load(open("settings.config"))
-		access_token, user_id = settings['access_token'], settings['user_id']
+		self.settings = json.load(open("settings.config"))
+		access_token, user_id = self.settings['access_token'], self.settings['user_id']
 		
 		self.client = dropbox.client.DropboxClient(access_token)
 		account_info = self.client.account_info()
@@ -70,60 +70,127 @@ class PortableDevSync():
 		Dialog(visual).message("Logged in.", "Succesfully logged in as %s." % name)
 		Dialog(visual).message("Start interface", "Starting interface.")
 		self.__startServer()
-		#self.__uploadFile("C:\Users\Stephan\Documents\GitHub\PortableDevSync\LICENSE")
-		self.__fileParentRev("LICENSE")
 		
-	def __fileParentRev(self, file):
-		try:
-			response = self.client.metadata(file)
-			Dialog(visual).message("Metadata", str(response))
-			return response['rev']
-		except:
-			return False
+		self.addMonitor("M:\PyQt")
+		
+		#self.__uploadFile("C:\Users\Stephan\Documents\GitHub\PortableDevSync\LICENSE")
+		#self.__fileParentRev("LICENSE")
+			
+	def __checkFile(self, rel):
+		rel = rel.replace(os.path.sep, "/")
+		
+		response = self.client.metadata(rel)
+		return response
 	
-	def __uploadFile(self, dir):
+	def __uploadFile(self, abs, rel, rev=False):
 		try:
-			f = open(dir, 'rb')
+			f = open(abs, 'rb')
 		except IOError:
 			return False
+			
+		rel = rel.replace(os.path.sep, "/")
 		
-		response = self.client.put_file(os.path.basename(dir), f)
-		
-		Dialog(visual).message("Uploaded", str(response))
-		
+		if rev:
+			response = self.client.put_file(rel, f, parent_rev=rev)
+		else:
+			response = self.client.put_file(rel, f)
+				
 	def addMonitor(self, dir):
+	
 		if not os.path.exists(dir):		
 			Dialog(visual).error("Could not add monitor","Could not add monitor as this directory does not exist.")
 			return False
-		if not os.path.isDir(dir):		
+		if not os.path.isdir(dir):		
 			Dialog(visual).error("Could not add monitor","Could not add monitor as this is not a directory.")
 			return False
+			
+		monitors = self.settings["monitors"]		
+		n = 1		
+		name = dir.split(os.sep)[-1]
+		
+		for m in monitors:
+			mon = Monitor().fromJSON(monitors[m])
+			if mon.name == name:
+				n+=1
+			if mon.absolutePath == dir:
+				Dialog(visual).warning("Could not add monitor", "Could not add monitor, this directory is already being monitored.")
+				return False
+		
+		monitor = Monitor()
+		monitor.absolutePath = dir
+		monitor.name = name
+		
+		monitor.latestCheck = datetime.datetime.now()
+		self.check( monitor, upload = False )		
+		
+		self.settings["monitors"]["%s_%s" % (monitor.name, n)] = monitor.toJSON()
+		s = open("settings.config", "w")
+		s.write( json.dumps( self.settings ) )
+		s.close()
+		
+		
+		
+	def check(self, monitor, upload=False):
+		dir = monitor.absolutePath
+		onehour = datetime.timedelta(0, 3600) # 3600 seconds
+		
+		for root, dirs, files in os.walk(dir):
+			for f in files:
+				full = os.path.join(root, f)
+				stat = os.stat( full )
+				size = stat.st_size
+				mtime = stat.st_mtime
+				rel = "".join([ monitor.name, full.split(monitor.name)[-1] ])
+				difference = monitor.latestCheck - datetime.datetime.fromtimestamp(mtime)
+				
+				if size > self.settings["max_size"]:
+					continue
+				
+				if rel not in monitor.files:
+					monitor.files.append(rel)
+					metadata = self.__checkFile(rel)
+					
+					if not metadata:
+						self.__uploadFile( full, rel, rev=None)
+						Dialog(visual).message("Uploading", "Uploading new file '%s'. " % f)
+					elif difference < onehour:
+						self.__uploadFile( full, rel, rev=metadata['rev'])
+						Dialog(visual).message("Updating", "Updating file '%s'. " % f)
+				else:
+					if difference < onehour:
+						metadata = self.__checkFile(rel)
+						self.__uploadFile( full, rel, rev=metadata['rev'])
+						Dialog(visual).message("Updating", "Updating file '%s'. " % f)				
+				
+		monitor.latestCheck = datetime.datetime.now()
+
 
 class Monitor():
 	def __init__(self):
 		self.absolutePath = ""
-		self.relativePath = ""
 		self.name = ""
-		self.latestCheck = datetime.datetime()
+		self.latestCheck = None
 		self.timeFormat = "%d/%m/%y %H:%M"
+		self.files = []
 				
 		
 	def toJSON(self):
 		vars = {}
 		vars["absolutePath"] = self.absolutePath
-		vars["relativePath"] = self.relativePath
 		vars["name"] = self.name
 		vars["latestCheck"] = self.latestCheck.strftime(self.timeFormat)
+		vars["files"] = self.files
 		
-		return json.dumps(vars)
+		return json.dumps(vars)		
 		
-		
-	def fromJSON(self,json):
-		vars = json.loads(json)
+	def fromJSON(self, fjson):
+		vars = json.loads(fjson)
 		self.absolutePath = vars["absolutePath"]
-		self.relativePath = vars["relativePath"]
-		self.latestCheck = vars["latestCheck"].strptime(self.timeFormat)
+		self.latestCheck = datetime.datetime.strptime(vars["latestCheck"], self.timeFormat)
 		self.name = vars["name"]
+		self.files = vars["files"]
+		
+		return self
 		
 
 def getDropboxAPI():

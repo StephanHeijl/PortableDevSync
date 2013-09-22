@@ -113,7 +113,7 @@ class Dialog():
 	
 	def warning(self, title, message):	
 		if self.visual:
-			tkMessageBox.showwarning("Warning",title, message)
+			tkMessageBox.showwarning(title, message)
 		else:
 			self.drawConsoleDialog("Warning",title, message)
 	
