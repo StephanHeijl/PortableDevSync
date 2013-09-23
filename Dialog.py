@@ -16,7 +16,7 @@ class Dialog():
 	
 	def drawConsoleDialog(self, type, title, message, buttons={}, fields={} ):
 		dialog = []
-		width = 60
+		width = 42
 		textwidth = width-2
 		lines = message.split("\n")
 		print "+" + ("-"*width) + "+"
@@ -53,11 +53,11 @@ class Dialog():
 		if len(header) > width:
 			header = header[:width-5] + "..."
 			
-		centerspace = ((width-len(header))/2)
+		centerspace = ((width-len(header))/2)-1
 		
-		top = "|%s %s " % ("="*centerspace, header)
-		top = top.ljust(width+1,"=")
-		top+="|"
+		top = "| %s %s " % ("="*centerspace, header)
+		top = top.ljust(width,"=")
+		top+=" |"
 		print top
 		
 			
