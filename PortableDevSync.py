@@ -18,7 +18,6 @@ from InterfaceServer import *
 class PortableDevSync():
 	def __init__(self):
 		self.client = None
-		self.version = None
 		self.__loadMonitors()
 		try:
 			app_key, app_secret = self.__getAppKeyAndSecret()
@@ -38,7 +37,7 @@ class PortableDevSync():
 		for commit in commits:
 			versions.append(commit['sha'])
 		
-		if 'version' in self.settings:
+		if 'version' not in self.settings:
 			self.adjustSettings(version=versions[0])
 			
 		currentVersion = self.settings['version']
