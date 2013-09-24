@@ -5,6 +5,8 @@ import tempfile
 import urllib
 import os
 import zipfile
+import tarfile
+import gzip
 import urllib2
 import shutil
 import subprocess
@@ -13,10 +15,27 @@ import sys
 class InstallModule():
 	def __init__(self, name):
 		self.name = name
+		if not self.checkSetupTools() and name != "setuptools":
+			self.installSetupTools()
+		
 		self.installed = False
 		self.tmpfile = None
 		self.tmp_extract_dir = None
+	
+	def checkSetupTools(self):
+		try:
+			import setuptools
+			return True
+		except ImportError:
+			return False
+			
+	def installSetupTools(self):
+		with InstallModule(name="setuptools") as im:
+			im.url("https://pypi.python.org/packages/source/s/setuptools/setuptools-1.1.6.tar.gz")
+			im.extract()
+			im.setup(setup="ez_setup.py")
 		
+	
 	def url(self,url):
 		# Retreive a file from an url, store it in a temp directory
 		filename = url.split("/")[-1]
@@ -29,25 +48,53 @@ class InstallModule():
 			download.close()
 			tmpfile.close()
 	
-	def unzip(self):
+	def extract(self):
 		if not self.tmpfile:
 			raise Exception, "No temporary file available to unzip."
 		
-		tmp_extract_dir_name = "pds_tmp_extract_" + ".".join(os.path.basename(self.tmpfile).split(".")[:-1])
+		self.tmp_extract_dir_name = "pds_tmp_extract_" + ".".join(os.path.basename(self.tmpfile).split(".")[:-1])
 		os.chdir( os.path.dirname(self.tmpfile) )
-		if not os.path.exists(tmp_extract_dir_name):
-			os.mkdir( tmp_extract_dir_name )
-		os.chdir( tmp_extract_dir_name )
-			
+		
+		compressions = { 	"gz" : self.ungz,
+							"zip" : self.unzip,
+							"tar" : self.untar	}
+		try:
+			compressions[ self.tmpfile.split(".")[-1] ]()
+		except KeyError:
+			raise Exception, "Can't extract this filetype."
+		
+		self.tmp_extract_dir = os.path.join( os.path.dirname(self.tmpfile), self.tmp_extract_dir_name )
+	
+	def unzip(self):
+		if not os.path.exists(self.tmp_extract_dir_name):
+			os.mkdir(self.tmp_extract_dir_name )
+		os.chdir( self.tmp_extract_dir_name )
+		
 		with zipfile.ZipFile(self.tmpfile, 'r') as archive:
 			archive.extractall()
-		
-		self.tmp_extract_dir = os.path.join( os.path.dirname(self.tmpfile), tmp_extract_dir_name )
+
+	def ungz(self):			
+		with gzip.GzipFile(self.tmpfile, 'rb') as archive:
+			outName = ".".join(self.tmpfile.split(".")[:-1])
+			out = open(outName, "wb")
+			out.write(archive.read())
+			out.close()
+			archive.close()
+			self.tmpfile = outName
+		if self.tmpfile.split(".")[-1] == "tar": # tar.gz files are common
+			self.untar()
 	
-	def __find_setup(self, dir):
+	def untar(self):
+		if not os.path.exists(self.tmp_extract_dir_name):
+			os.mkdir( self.tmp_extract_dir_name )
+		os.chdir( self.tmp_extract_dir_name )	
+		with tarfile.TarFile(self.tmpfile, 'r') as archive:
+			archive.extractall()
+	
+	def __find_setup(self, dir, setup="setup.py"):
 		contents = os.listdir(dir)
-		if "setup.py" in contents:
-			return os.path.join(dir, "setup.py")
+		if setup in contents:
+			return os.path.join(dir, setup)
 		
 		for f in contents:
 			if os.path.isdir(f):
@@ -55,12 +102,11 @@ class InstallModule():
 				if found:
 					return found
 					
-		return False
-		
+		return False		
 	
-	def setup(self, build=False, install=True):
+	def setup(self, build=False, install=True, setup="setup.py"):
 		if not self.tmp_extract_dir:
-			raise Exception, "No extracted files found, please use unzip() first."
+			raise Exception, "No extracted files found, please use extract() first."
 		
 		setuppath = self.__find_setup(self.tmp_extract_dir)
 		if not setuppath:
@@ -78,6 +124,8 @@ class InstallModule():
 		if install:		
 			install = subprocess.Popen(command + " install")
 			install.communicate()
+			
+		self.installed = True
 		
 	def pip(self,name):
 		# TODO: Implement pip code

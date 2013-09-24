@@ -7,7 +7,6 @@ import json
 import hashlib
 import sys
 import subprocess
-import threading
 import time
 import datetime
 import multiprocessing
@@ -27,14 +26,25 @@ class PortableDevSync():
 			Dialog(visual).error("Could not contact key server", "Could not contact key server, unable to verify app. \n%s" % e)
 			return
 		self.flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
+		self.loadSettings()
+		self.checkForUpdates()
 		
 	def checkForUpdates(self):
 		githubUrl = "https://api.github.com/repos/StephanHeijl/PortableDevSync/commits"
 		request = urllib2.urlopen(githubUrl)
 		commits = json.load(request)
 		
+		versions = []
 		for commit in commits:
-			print commit.sha			
+			versions.append(commit['sha'])
+		
+		if 'version' in self.settings:
+			self.adjustSettings(version=versions[0])
+			
+		currentVersion = self.settings['version']
+		if currentVersion != versions[0]:
+			Dialog(visual).yesno("Update available", "An update is available. Would you like to download and install it now?")
+		
 		
 	def __getAppKeyAndSecret(self):
 		request = urllib2.urlopen("http://cytosine.nl/~stephan/PortableDevSync/DBAppSecret.py")
@@ -44,7 +54,7 @@ class PortableDevSync():
 	def __authenticate(self):
 		authorize_url = self.flow.start()
 		Dialog(visual).message("Authorization needed.","You will need to authorize PortableDevSync to use your Dropbox account.\nA webpage with the authorization options will open now.")
-		if Dialog(visual).yesno("Open browser","Would you like PortableDevSync to the link in your browser for you?"):
+		if Dialog(visual).yesno("Open browser","Would you like PortableDevSync to open the link in your browser for you?"):
 			webbrowser.open(authorize_url)
 		else:
 			Dialog(visual).message("Authorize", "Please visit \n%s\n to authorize the app." % authorize_url)
@@ -57,14 +67,22 @@ class PortableDevSync():
 							 max_size= (2 * 1024 * 1024),
 							 version="")
 		
-	def adjustSetting(self, **kwargs):
+	def loadSettings(self):
+		try:
+			self.settings = json.load(open("settings.config"))
+		except:
+			self.settings = {}
+			self.__authenticate()
+	
+	def adjustSettings(self, **kwargs):
 		settingsconf = open("settings.config", "w")
 		
-		for key, value in kwargs:
+		for key, value in kwargs.items():
 			if value == None:
 				del self.settings[key]
 			else:
 				self.settings[key] = value
+				
 		settingsconf.write(json.dumps(self.settings))
 		settingsconf.close()
 		
@@ -79,12 +97,8 @@ class PortableDevSync():
 		if Dialog(visual).yesno("Server started.", "Server started on port %s. Navigate to http://localhost:%s/ ?" % (IS.currentPort, IS.currentPort)):
 			webbrowser.open("http://localhost:%s/" % IS.currentPort)
 	
-	def setup(self):
-		if not os.path.exists("settings.config"):
-			self.__authenticate()
-			
+	def setup(self):			
 		Dialog(visual).message("Dropbox authenticated.", "Dropbox access authenticated, connecting to Dropbox...")
-		self.settings = json.load(open("settings.config"))
 		access_token, user_id = self.settings['access_token'], self.settings['user_id']
 		
 		self.client = dropbox.client.DropboxClient(access_token)
@@ -98,7 +112,7 @@ class PortableDevSync():
 		self.setup()
 		self.__startServer()
 		Dialog(False).prompt("Server running", "Press enter to stop the server.")
-		Dialog(visual).message("Starting service", "Starting PortableDevSync service.")
+		#Dialog(visual).message("Starting service", "Starting PortableDevSync service.")
 
 		#subprocess.Popen("pythonw PortableDevSync.py -service", shell=True)
 		
@@ -285,7 +299,7 @@ def getDropboxAPI():
 	try:
 		with InstallModule(name="dropbox") as im:
 			im.url( "https://www.dropbox.com/static/developers/dropbox-python-sdk-1.6.zip" )
-			im.unzip()
+			im.extract()
 			im.setup()
 			return im.test()
 	except Exception as e:
@@ -307,8 +321,7 @@ if __name__ == "__main__": # AutoRun!
 		except:
 			pass
 			
-	print args
-		
+	print args		
 	
 	visual = True if "text" not in args else False
 	
@@ -337,7 +350,7 @@ if __name__ == "__main__": # AutoRun!
 			while retry:
 				dropboxAvailable = getDropboxAPI()
 				if not dropboxAvailable:
-					retry = Dialog.retrycancel("Dropbox could not be installed.", "There was an error while downloading/installing the Dropbox API.")
+					retry = Dialog(visual).retrycancel("Dropbox could not be installed.", "There was an error while downloading/installing the Dropbox API.")
 				else:
 					retry = False
 			

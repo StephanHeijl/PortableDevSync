@@ -51,7 +51,7 @@ class Dialog():
 		header = "%s - %s" % (type, title)
 		
 		if len(header) > width:
-			header = header[:width-5] + "..."
+			header = header[:width-6] + "..."
 			
 		centerspace = ((width-len(header))/2)-1
 		
@@ -93,7 +93,10 @@ class Dialog():
 		if len(buttons) > 0:
 			response = ""
 			while response not in buttons:
-				response = raw_input("Response: ")
+				if len(response) == 0:
+					response = raw_input("Response: ")
+				else:
+					response = raw_input("Please type '%s' or '%s': " % ( ", ".join(buttons.keys()[:-1]), buttons.keys()[-1]) )
 			print "'%s' was selected." % response
 			return buttons[response]
 		
@@ -138,7 +141,7 @@ class Dialog():
 	
 	def retrycancel(self, title, message):
 		if self.visual:
-			return tkMessageBox.retrycancel(title, message)
+			return tkMessageBox.askretrycancel(title, message)
 		else:
 			return self.drawConsoleDialog("Retry/Cancel",title, message, buttons={'retry':True, 'cancel': False})
 	

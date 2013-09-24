@@ -4,6 +4,7 @@ import threading
 import urllib
 import json
 import subprocess
+import os
 
 class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -39,6 +40,7 @@ class InterfaceServer(threading.Thread):
 		super(InterfaceServer, self).__init__()
 		
 	def run(self):
+		os.chdir("interface")
 		Handler = MyHandler
 		while not self.started:
 			try:
