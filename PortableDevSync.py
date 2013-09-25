@@ -11,6 +11,8 @@ import time
 import datetime
 import multiprocessing
 import re
+import zipfile
+import cStringIO
 from InstallModule import InstallModule
 from Dialog import Dialog
 from InterfaceServer import *
@@ -43,6 +45,21 @@ class PortableDevSync():
 		currentVersion = self.settings['version']
 		if currentVersion != versions[0]:
 			Dialog(visual).yesno("Update available", "An update is available. Would you like to download and install it now?")
+		
+		self.adjustSettings(version=versions[0])
+		
+	def downloadUpdate(self):
+		updateUrl = "https://github.com/StephanHeijl/PortableDevSync/archive/master.zip"
+		r = urllib2.urlopen(updateUrl)
+		
+		f = cStringIO.StringIO()
+		f.write(r.read())
+		f.close()
+		r.close()
+		with zipfile.ZipFile(r, 'r') as archive:
+			archive.extractall()
+		
+		print os.getcwd()
 		
 		
 	def __getAppKeyAndSecret(self):
