@@ -29,8 +29,7 @@ class PortableDevSync():
 		self.loadSettings()
 		update = Updater()
 		
-		update.update()
-
+		update.update(self, visual)
 		
 	def __getAppKeyAndSecret(self):
 		request = urllib2.urlopen("http://cytosine.nl/~stephan/PortableDevSync/DBAppSecret.py")

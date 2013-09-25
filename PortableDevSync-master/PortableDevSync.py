@@ -11,11 +11,10 @@ import time
 import datetime
 import multiprocessing
 import re
-import zipfile
-import cStringIO
 from InstallModule import InstallModule
 from Dialog import Dialog
 from InterfaceServer import *
+from Updater import Updater
 
 class PortableDevSync():
 	def __init__(self):
@@ -28,42 +27,10 @@ class PortableDevSync():
 			return
 		self.flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
 		self.loadSettings()
-		self.checkForUpdates()
+		update = Updater()
 		
-	def checkForUpdates(self):
-		githubUrl = "https://api.github.com/repos/StephanHeijl/PortableDevSync/commits"
-		request = urllib2.urlopen(githubUrl)
-		commits = json.load(request)
-		
-		versions = []
-		for commit in commits:
-			versions.append(commit['sha'])
-		
-		if 'version' not in self.settings:
-			self.adjustSettings(version=versions[0])
-			
-		currentVersion = self.settings['version']
-		if currentVersion != versions[0]:
-			Dialog(visual).yesno("Update available", "An update is available. Would you like to download and install it now?")
-		
-		if downloadUpdate():
-			self.adjustSettings(version=versions[0])
-		else:
-			Dialog(visual).error("")
-		
-	def downloadUpdate(self):
-		updateUrl = "https://github.com/StephanHeijl/PortableDevSync/archive/master.zip"
-		r = urllib2.urlopen(updateUrl)
-		
-		f = cStringIO.StringIO()
-		f.write(r.read())
-		f.close()
-		r.close()
-		with zipfile.ZipFile(r, 'r') as archive:
-			archive.extractall()
-		
-		print os.getcwd()
-		
+		update.update()
+
 		
 	def __getAppKeyAndSecret(self):
 		request = urllib2.urlopen("http://cytosine.nl/~stephan/PortableDevSync/DBAppSecret.py")

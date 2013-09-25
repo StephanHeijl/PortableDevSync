@@ -1,17 +1,23 @@
 import zipfile
 import cStringIO
 import urllib2
+import os
+import hashlib
+import json
+from Dialog import Dialog
 
 class Updater():
-	def update():
-		if self.checkForUpdate():
+	def update(self,pds, v):
+		global visual
+		visual = v
+		if self.checkForUpdates(pds):
 			f = self.downloadUpdate()
 			if f:
 				if self.installUpdate(f):
 					self.removeOld()
 			
 		
-	def checkForUpdates(self):
+	def checkForUpdates(self, pds):
 		githubUrl = "https://api.github.com/repos/StephanHeijl/PortableDevSync/commits"
 		request = urllib2.urlopen(githubUrl)
 		commits = json.load(request)
@@ -20,17 +26,17 @@ class Updater():
 		for commit in commits:
 			versions.append(commit['sha'])
 		
-		if 'version' not in self.settings:
-			self.adjustSettings(version=versions[0])
+		if 'version' not in pds.settings:
+			pds.adjustSettings(version=versions[0])
 			
-		currentVersion = self.settings['version']
+		currentVersion = pds.settings['version']
 		if currentVersion != versions[0] or currentVersion != "dev":
-			Dialog(visual).yesno("Update available", "An update is available. Would you like to download and install it now?")
+			if Dialog(visual).yesno("Update available", "An update is available. Would you like to download and install it now?"):
+				return True
 		
-		if self.downloadUpdate():
-			self.adjustSettings(version=versions[0])
-		else:
-			Dialog(visual).error("Update error", "Update could not be downloaded or applied.")
+		return False
+		
+		
 		
 	def downloadUpdate(self):
 		updateUrl = "https://github.com/StephanHeijl/PortableDevSync/archive/master.zip"
@@ -41,15 +47,26 @@ class Updater():
 		f.seek(0)
 		r.close()
 		
-		return unpackName
+		return f
 		
 	def installUpdate(self,f):
 		unpackName = "PortableDevSync-master"
 		with zipfile.ZipFile(f, 'r') as archive:
 			archive.extractall()
-		# move all the old files
-		for file in os.listdir(unpackName):
+		
+		for root, dirs, file in os.walk(unpackName):
+			print root,
+			print root.strip(unpackName+"/")
 			print file
+		
+	
+	def hashfile(afile, blocksize=65536):
+		hasher = hashlib.md5()
+		buf = afile.read(blocksize)
+		while len(buf) > 0:
+			hasher.update(buf)
+			buf = afile.read(blocksize)
+		return hasher.digest()
 		
 	def removeOld(self):
 		pass
