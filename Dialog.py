@@ -122,7 +122,7 @@ class Dialog():
 	
 	def error(self, title, message):
 		if self.visual:
-			tkMessageBox.showerror("Error",title, message)
+			tkMessageBox.showerror(title, message)
 		else:
 			self.drawConsoleDialog("Error",title, message)
 			

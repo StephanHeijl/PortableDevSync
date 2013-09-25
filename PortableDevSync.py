@@ -46,7 +46,10 @@ class PortableDevSync():
 		if currentVersion != versions[0]:
 			Dialog(visual).yesno("Update available", "An update is available. Would you like to download and install it now?")
 		
-		self.adjustSettings(version=versions[0])
+		if downloadUpdate():
+			self.adjustSettings(version=versions[0])
+		else:
+			Dialog(visual).error("")
 		
 	def downloadUpdate(self):
 		updateUrl = "https://github.com/StephanHeijl/PortableDevSync/archive/master.zip"
