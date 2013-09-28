@@ -1,0 +1,188 @@
+body {
+	font-family: Segoe UI,sans-serif;
+	margin: 0;
+	padding:0;
+}
+
+h1 {
+    text-indent: -9999px;
+    background-image:url(img/logo.png);
+    background-repeat:no-repeat;
+    display:block;
+	margin:10px;
+	padding: 0;
+	background-size: cover;
+}
+
+@media screen and (min-width: 438px){
+	h1 {
+		width: 438px;
+		height: 57px;
+	}
+}
+
+@media screen and (min-width: 1025px){
+	#center {
+		width: 1024px;
+		margin: 0 auto;
+		position: relative;
+		overflow: hidden;
+	}
+}
+
+.controls {
+    margin:0;
+    padding: 0px 5px 0px 5px;
+    background: #333;
+    color: white;
+    display:block;
+	text-align:center;
+}
+
+.controls li {
+	list-style-type:none;
+	margin:0;    
+	padding: 12px 12px 12px 40px;
+	position: relative;
+	cursor: pointer;
+	vertical-align:middle;
+	line-height:100%;
+	/* For IE */
+	zoom:1;
+	display:inline;
+	/* For modern browsers */
+	display:inline-block;
+	text-align: left;
+}
+
+.controls li.clean {
+	padding: 12px;
+}
+
+.controls li.clean:before {
+	border:0;
+}
+
+.controls li.page-link {
+	margin:0 auto;
+}
+
+@media screen and (max-width: 767px){
+	.controls {
+		padding: 0;
+	}
+    .controls li {
+        width: 100%;
+		padding-top: 15px;
+		padding-bottom: 15px;
+	}
+	button {
+		width: 100%;
+		padding-top: 12px !important;
+		padding-bottom: 12px !important;
+		text-align: left;
+	}
+	
+}
+
+@media screen and (min-width: 767px){
+	#next {
+		float: right;
+	}
+	#previous {
+		float: left;
+	}
+}
+
+/* Different images for each of the different buttons */
+.controls #new:before {
+    background-image: url(img/plus.png);
+}
+.controls #remove:before {
+    background-image: url(img/cross.png);
+}
+.controls #download:before {
+    background-image: url(img/down_arrow.png);
+}
+.controls #revisions:before {
+    background-image: url(img/back_arrow.png);
+}
+.controls #update:before {
+    background-image: url(img/up_arrow.png);
+}
+.controls #sync-now:before {
+    background-image: url(img/rotate_arrow.png);
+}
+.controls #next:before {
+	background-image: url(img/right_arrow.png);
+}
+.controls #previous:before {
+	background-image: url(img/left_arrow.png);
+}
+
+.controls li:before, button:before {
+    content:'';
+    width: 24px;
+    height: 24px;
+    border-radius: 100%;
+    background: transparent;
+    border: 2px solid white;
+    position: absolute;
+    margin: auto;
+    top: 0px;
+    bottom: 0px;
+    left: 5px;
+}
+
+.controls li:hover {
+    background: #555;
+}
+
+.controls li.requires-selection {
+    opacity:0.5;
+	cursor: not-allowed;
+}
+.controls li.selection-available {
+    opacity:1;
+	cursor: pointer;
+}
+
+#content {
+	width: 100%;
+	border-collapse:collapse;
+	margin: 10px 0px 10px 0px;
+}
+
+#content tr {
+	height: 40px;
+	cursor:pointer;
+}
+
+#content tr td:first-child {
+	width:21px;
+}
+
+#content thead tr {
+	font-weight:bold;
+	background: #333;
+	color: white;
+}
+
+#content tr:nth-child(even) {
+	background-color: #eee
+}
+
+button {
+	background: #333;
+    color: white;
+	font-family:inherit;
+	padding: 7px 13px 10px 40px;
+	font-size: inherit;
+	border: 0;
+	display: inline-block;
+	cursor:pointer;
+	position: relative;
+	margin: 0;
+}
+
+
