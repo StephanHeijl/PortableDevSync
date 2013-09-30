@@ -8,7 +8,7 @@ import os
 
 class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
-        if "?" in args[0]:
+        if not isinstance(args[0], int) and "?" in args[0]:
 			print args[0]
 			
 			start = args[0].find("?") + 1
@@ -44,7 +44,7 @@ class InterfaceServer(threading.Thread):
 		Handler = MyHandler
 		while not self.started:
 			try:
-				httpd = SocketServer.TCPServer(("127.0.0.1", self.currentPort), Handler)
+				httpd = SocketServer.TCPServer(("", self.currentPort), Handler)
 				self.started=True
 			except:
 				self.currentPort+=1

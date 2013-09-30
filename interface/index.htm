@@ -4,23 +4,103 @@
 		<title>
 			PortableDevSync - Home
 		</title>
+		<link href="style.css" rel=stylesheet />
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, max-zoom: 1, min-zoom: 1">
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script src="javascript.js"></script>
 	</head>
 	<body>
 		<div id="center">
 			<header>
 				<h1>PortableDevSync</h1>
 			</header>
-			<ul id="controls">
-				<li> new </li>
-				<li> remove </li>
-				<li> download </li>
-				<li> revisions </li>
-				<li> pause </li>
+			<ul class="controls">
+				<li id="new"> new </li>
+				<li class="requires-selection" id="remove"> remove </li>
+				<li class="requires-selection" id="download"> download </li>
+				<li class="requires-selection" id="revisions"> revisions </li>
+                <li class="requires-selection" id="update"> update software</li>
+                <li class="requires-selection" id="sync-now"> sync now </li>
 			</ul>
 			
-			<table> 
+			<div id="new-monitor">
+				<div id="close"></div>
+				<table id="new-monitor-data">
+					<thead>
+						<tr>
+							<td colspan=2> <h2> Adding a new monitor </h2></td>
+						</tr>
+					</thead>
+					<tr>
+						<td> Name </td>
+						<td> <input type="text"/> </td>
+						<td> <div class="help-button" title="The name you'd like to call the directory you're syncing.">?</div></td>
+					</tr>
+					<tr>
+						<td> Folder to synchronize </td>
+						<td> <input type="file" id="ctrl" webkitdirectory directory /> </td>
+						<td> <div class="help-button" title="Select the folder you'd like to synchronize. ">?</div></td>
+					</tr>
+					<tr>
+						<td> Time between syncs </td>
+						<td> <input type="time" step=600 value="00:00:00" /> </td>
+						<td> <div class="help-button" title="The time between synchronizations in hours and minutes. Leave this empty or at 00:00 for a daily check.">?</div></td>
+					</tr>
 				
+				</table>
+			</div>
+			
+			<table id="content">
+				<thead>
+					<tr>
+						<td><input type="checkbox" id="select-all"/></td>
+						<td>Name</td>
+						<td>Last updated</td>
+						<td>Files synced</td>
+					</tr>
+				</thead>
+                <!-- Sample contents -->
+				<tr>
+                    <td> <input type="checkbox"/> </td>
+                    <td> GRIDNET </td>
+                    <td> </td>
+                    <td> </td>
+                </tr>
+                <tr>
+                    <td> <input type="checkbox"/> </td>
+                    <td> PortableDevSync </td>
+                    <td> </td>
+                    <td> </td>
+                </tr>
+                <tr>
+                    <td> <input type="checkbox"/> </td>
+                    <td> This is a folder  </td>
+                    <td> </td>
+                    <td> </td>
+                </tr>
+				<tr>
+                    <td> <input type="checkbox"/> </td>
+                    <td> This is another folder  </td>
+                    <td> </td>
+                    <td> </td>
+                </tr>
 			</table>
+			
+			<ul class="controls">
+				<li id="previous"> previous page </li>
+				
+				<li class="page-link clean">1</li>
+				<li class="page-link clean">2</li>
+				<li class="page-link clean">3</li>
+				
+				<li id="next"> next page </li>
+			</ul>
+			
+			
+			<footer>
+				&copy; Stephan Heijl, 2013. 
+				You can find PortableDevSync on <a href="https://github.com/StephanHeijl/PortableDevSync">GitHub</a>.
+			</footer>
 		</div>
 	</body>
 </html>

@@ -5,6 +5,19 @@
 $(function () {
 	"use strict";
 	
+	var currentPage = 1;
+	
+	/* Shows the 'new monitor' menu */
+	
+	$("#new").click(function() {
+		$("#new-monitor").slideDown();
+	});
+	
+	/* Closes the 'new monitor' menu */
+	$("#close").click(function() {
+		$("#new-monitor").slideUp();
+	});
+	
 	/* Toggles the classes of menu options that require a selection */
 	$("#content").on("change", "input:checkbox", function () {
 		if ($("#content input:checkbox:checked").length > 0) {
@@ -20,6 +33,7 @@ $(function () {
 	
 	/* Toggle checkbox when clicking on the parent row */
 	$("#content").on("click", "tr", function () {
+		console.log(this);
 		var checkBoxes = $(this).find("input:checkbox");
 		checkBoxes.prop("checked", !checkBoxes.prop("checked"));
 		checkBoxes.change(); // Triggers checkbox change event
@@ -27,9 +41,9 @@ $(function () {
 	
 	/* Load all the monitors */
 	$.getJSON("monitors.config", function (monitors) {
-		monitors.each(function() {
-			row = $("<tr>")
-			this.
+		$.each(monitors,function () {
+			var row = $("<tr>");
+			console.log(this);
 		});
 	});
 	

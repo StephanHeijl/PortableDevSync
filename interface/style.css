@@ -14,6 +14,28 @@ h1 {
 	background-size: cover;
 }
 
+h2 {
+	font-weight: normal;
+	font-family: Segoe UI Light, sans-serif;
+	margin: 0 0 10px 0;
+	text-align: center;
+}
+
+a {
+	color: #0076C9	;
+}
+
+input {
+	font-family: inherit;
+	font-size: inherit;
+}
+
+input[type=text],input[type=time] {
+	border: 2px solid #aaa;
+	padding: 3px;
+}
+
+
 @media screen and (min-width: 438px){
 	h1 {
 		width: 438px;
@@ -30,6 +52,27 @@ h1 {
 	}
 }
 
+#new-monitor {
+	background: #0076C9;
+	color: white;	
+	padding: 10px 20px 10px 10px;
+	display: none;
+	position: relative;
+	margin: 10px 0px 0px 0px;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+#new-monitor #close {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	color: white;
+	background-image:url(img/cross.png);
+	width: 24px;
+	height: 24px;
+	cursor: pointer;
+}
 .controls {
     margin:0;
     padding: 0px 5px 0px 5px;
@@ -159,12 +202,12 @@ h1 {
 }
 
 #content tr td:first-child {
-	width:21px;
+	width:21px; 
 }
 
 #content thead tr {
 	font-weight:bold;
-	background: #333;
+	background: #0076C9;
 	color: white;
 }
 
@@ -185,4 +228,26 @@ button {
 	margin: 0;
 }
 
+.help-button {
+	background: #333;
+	color: white;
+	width: 12pt;
+	height: 12pt;
+	line-height: 12pt;
+	font-size: 12pt;
+	padding: 2pt;
+	text-align: center;
+	border-radius: 100%;
+	cursor:pointer;
+}
+
+.help-button:hover {
+	background: #555;
+}
+
+footer {
+	padding: 10px;
+	text-align: center;
+	font-size: 9pt;
+}
 
